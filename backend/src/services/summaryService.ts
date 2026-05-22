@@ -1,4 +1,5 @@
-import { env, hasAnthropic } from "../config/env.js";
+import { env, hasGemini } from "../config/env.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const SYSTEM_PROMPT = `You are a finance-literate engineering coach writing for a startup founder.
 Rules:
@@ -48,33 +49,27 @@ export function templatedSummary(result: AuditResultPayload, useCase: string): s
 }
 
 export async function generateSummary(result: AuditResultPayload, useCase: string) {
-  if (!hasAnthropic()) {
-    return { text: templatedSummary(result, useCase), source: "template" as const };
+  if (hasGemini()) {
+    try {
+      const genAI = new GoogleGenerativeAI(env.geminiApiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        systemInstruction: SYSTEM_PROMPT,
+        generationConfig: {
+          maxOutputTokens: 220,
+          temperature: 0.7,
+        },
+      });
+
+      const response = await model.generateContent(buildUserPrompt(result, useCase));
+      const text = response.response.text()?.trim();
+      if (!text) throw new Error("empty response");
+      return { text, source: "ai" as const };
+    } catch (err) {
+      console.error("[stackwise] Gemini failed:", err);
+      return { text: templatedSummary(result, useCase), source: "template" as const };
+    }
   }
 
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": env.anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 220,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: buildUserPrompt(result, useCase) }],
-      }),
-    });
-
-    if (!res.ok) throw new Error(`Anthropic ${res.status}`);
-    const data = (await res.json()) as { content?: { type: string; text?: string }[] };
-    const text = data.content?.find((c) => c.type === "text")?.text?.trim();
-    if (!text) throw new Error("empty response");
-    return { text, source: "ai" as const };
-  } catch (err) {
-    console.error("[stackwise] Anthropic failed:", err);
-    return { text: templatedSummary(result, useCase), source: "template" as const };
-  }
+  return { text: templatedSummary(result, useCase), source: "template" as const };
 }
