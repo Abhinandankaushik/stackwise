@@ -6,6 +6,9 @@ import { saveFormDraft, loadFormDraft } from "@/lib/storage";
 
 interface Props {
   onSubmit: (input: AuditInput) => void;
+  initialTeamSize?: number;
+  initialUseCase?: string;
+  isWidget?: boolean;
 }
 
 const USE_CASES: { id: UseCase; label: string }[] = [
@@ -21,25 +24,37 @@ function emptyEntry(toolId: ToolId = "cursor"): ToolEntry {
   return { toolId, planId: t.plans[1]?.id ?? t.plans[0].id, seats: 1, monthlySpend: 0 };
 }
 
-export function SpendForm({ onSubmit }: Props) {
+export function SpendForm({
+  onSubmit,
+  initialTeamSize = 1,
+  initialUseCase = "coding",
+  isWidget = false,
+}: Props) {
   const [entries, setEntries] = useState<ToolEntry[]>([emptyEntry()]);
-  const [teamSize, setTeamSize] = useState(1);
-  const [useCase, setUseCase] = useState<UseCase>("coding");
+  const [teamSize, setTeamSize] = useState(initialTeamSize);
+  const [useCase, setUseCase] = useState<UseCase>(initialUseCase as UseCase);
 
   // hydrate from localStorage
   useEffect(() => {
+    if (isWidget) {
+      setTeamSize(initialTeamSize);
+      setUseCase(initialUseCase as UseCase);
+      return;
+    }
     const draft = loadFormDraft();
     if (draft) {
       if (draft.tools?.length) setEntries(draft.tools);
       if (draft.teamSize) setTeamSize(draft.teamSize);
       if (draft.useCase) setUseCase(draft.useCase);
     }
-  }, []);
+  }, [isWidget, initialTeamSize, initialUseCase]);
 
   // persist
   useEffect(() => {
-    saveFormDraft({ tools: entries, teamSize, useCase });
-  }, [entries, teamSize, useCase]);
+    if (!isWidget) {
+      saveFormDraft({ tools: entries, teamSize, useCase });
+    }
+  }, [entries, teamSize, useCase, isWidget]);
 
   const estimated = useMemo(() => {
     return entries.reduce((sum, e) => {

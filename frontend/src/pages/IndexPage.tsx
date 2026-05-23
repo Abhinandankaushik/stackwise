@@ -4,11 +4,13 @@ import { SpendForm } from "@/components/SpendForm";
 import { ResultsView } from "@/components/ResultsView";
 import { runAudit, type AuditInput, type AuditResult } from "@/lib/audit-engine";
 import { encodeSharePayload } from "@/lib/storage";
+import { WidgetModal } from "@/components/WidgetModal";
 
 export function IndexPage() {
   const [result, setResult] = useState<AuditResult | null>(null);
   const [input, setInput] = useState<AuditInput | null>(null);
   const [slug, setSlug] = useState("");
+  const [widgetModalOpen, setWidgetModalOpen] = useState(false);
 
   function handleSubmit(i: AuditInput) {
     const r = runAudit(i);
@@ -38,7 +40,7 @@ export function IndexPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
+      <Header onOpenWidgetModal={() => setWidgetModalOpen(true)} />
       <main className="max-w-5xl mx-auto px-5 md:px-8 pt-14 pb-24">
         <Hero />
         <section id="form" className="mt-12">
@@ -52,18 +54,27 @@ export function IndexPage() {
               shareUrl={shareUrl}
               auditId={slug}
               teamSize={input.teamSize}
+              onOpenWidgetModal={() => setWidgetModalOpen(true)}
             />
           </section>
         )}
         <SocialProof />
-        <FAQ />
+        <FAQ onOpenWidgetModal={() => setWidgetModalOpen(true)} />
       </main>
       <Footer />
+
+      {/* Standalone Widget Creator Modal */}
+      <WidgetModal
+        isOpen={widgetModalOpen}
+        onClose={() => setWidgetModalOpen(false)}
+        initialTeamSize={input?.teamSize ?? 1}
+        initialUseCase={input?.useCase ?? "coding"}
+      />
     </div>
   );
 }
 
-function Header() {
+function Header({ onOpenWidgetModal }: { onOpenWidgetModal: () => void }) {
   return (
     <header className="border-b border-border/60">
       <div className="max-w-5xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
@@ -76,12 +87,20 @@ function Header() {
             by <a href="https://credex.rocks" className="underline">Credex</a>
           </span>
         </div>
-        <a
-          href="#form"
-          className="text-sm rounded-md bg-secondary px-3 py-1.5 border border-border hover:border-primary/50"
-        >
-          Run an audit
-        </a>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenWidgetModal}
+            className="text-sm rounded-md bg-secondary text-foreground px-3 py-1.5 border border-border hover:border-primary/50 cursor-pointer hidden sm:inline-block"
+          >
+            Embed widget
+          </button>
+          <a
+            href="#form"
+            className="text-sm rounded-md bg-primary text-primary-foreground px-3 py-1.5 font-semibold hover:opacity-90 cursor-pointer"
+          >
+            Run an audit
+          </a>
+        </div>
       </div>
     </header>
   );
@@ -150,7 +169,7 @@ function SocialProof() {
   );
 }
 
-function FAQ() {
+function FAQ({ onOpenWidgetModal }: { onOpenWidgetModal: () => void }) {
   const items = [
     {
       q: "How do you know what I should be paying?",
@@ -170,7 +189,18 @@ function FAQ() {
     },
     {
       q: "Can I embed this on my blog?",
-      a: "Widget is on the roadmap. For now, share the public audit URL with OG previews.",
+      a: (
+        <span>
+          Yes, you can customize and embed a mini Stackwise calculator on your website or blog.{" "}
+          <button
+            onClick={onOpenWidgetModal}
+            className="underline text-primary font-medium cursor-pointer bg-transparent border-none p-0 inline hover:opacity-85"
+          >
+            Click here to open the Widget Creator
+          </button>{" "}
+          to customize the form style and copy your iframe embed code.
+        </span>
+      ),
     },
   ];
   return (
@@ -178,12 +208,12 @@ function FAQ() {
       <h2 className="text-2xl font-bold">FAQ</h2>
       <div className="mt-4 divide-y divide-border border border-border rounded-xl overflow-hidden">
         {items.map((it, i) => (
-          <details key={i} className="group bg-card">
-            <summary className="cursor-pointer list-none p-4 flex justify-between items-center">
+          <details key={i} className="group bg-card text-foreground">
+            <summary className="cursor-pointer list-none p-4 flex justify-between items-center select-none">
               <span className="font-medium">{it.q}</span>
               <span className="text-muted-foreground group-open:rotate-45 transition">+</span>
             </summary>
-            <p className="px-4 pb-4 text-muted-foreground text-sm">{it.a}</p>
+            <div className="px-4 pb-4 text-muted-foreground text-sm">{it.a}</div>
           </details>
         ))}
       </div>

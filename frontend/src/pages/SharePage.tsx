@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { decodeSharePayload } from "@/lib/storage";
 import type { AuditResult, UseCase } from "@/lib/audit-engine";
 import { ResultsView } from "@/components/ResultsView";
+import { WidgetModal } from "@/components/WidgetModal";
 
 interface SharePayload {
   findings: AuditResult["findings"];
@@ -15,6 +16,7 @@ interface SharePayload {
 
 export function SharePage() {
   const { slug = "" } = useParams();
+  const [widgetModalOpen, setWidgetModalOpen] = useState(false);
   const payload = useMemo(() => decodeSharePayload<SharePayload>(slug), [slug]);
 
   if (!payload) {
@@ -58,12 +60,20 @@ export function SharePage() {
             </div>
             <span className="font-semibold tracking-tight">Stackwise</span>
           </Link>
-          <Link
-            to="/"
-            className="text-sm rounded-md bg-primary text-primary-foreground px-3 py-1.5 font-semibold"
-          >
-            Run my own audit
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setWidgetModalOpen(true)}
+              className="text-sm rounded-md bg-secondary text-foreground px-3 py-1.5 border border-border hover:border-primary/50 cursor-pointer hidden sm:inline-block"
+            >
+              Embed widget
+            </button>
+            <Link
+              to="/"
+              className="text-sm rounded-md bg-primary text-primary-foreground px-3 py-1.5 font-semibold"
+            >
+              Run my own audit
+            </Link>
+          </div>
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-5 md:px-8 py-10">
@@ -76,9 +86,18 @@ export function SharePage() {
           shareUrl={shareUrl}
           auditId={slug}
           teamSize={payload.teamSize}
+          onOpenWidgetModal={() => setWidgetModalOpen(true)}
           isPublic
         />
       </main>
+
+      {/* Widget Creator Modal Overlay */}
+      <WidgetModal
+        isOpen={widgetModalOpen}
+        onClose={() => setWidgetModalOpen(false)}
+        initialTeamSize={payload.teamSize}
+        initialUseCase={payload.useCase}
+      />
     </div>
   );
 }

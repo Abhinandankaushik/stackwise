@@ -147,3 +147,68 @@
     color: var(--color-foreground);
   }
 }
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+  }
+
+  /* Hide UI-only interactive controls and components during print */
+  header,
+  footer,
+  form,
+  .no-print,
+  button,
+  .share-intent-button,
+  a[href^="https://twitter.com"],
+  details summary span:last-child {
+    display: none !important;
+  }
+
+  /* Expand containers to use full page width */
+  main,
+  .print-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Style cards with basic borders instead of dark/glow backgrounds */
+  .rounded-3xl,
+  .rounded-2xl,
+  .rounded-xl {
+    background-color: #ffffff !important;
+    background: none !important;
+    color: #000000 !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .text-primary,
+  .text-savings {
+    color: #16a34a !important; /* Green for savings in print */
+  }
+
+  .text-muted-foreground {
+    color: #4b5563 !important;
+  }
+
+  /* Hide check-boxes during print */
+  input[type="checkbox"].simulator-checkbox {
+    display: none !important;
+  }
+}
+
+.simulator-checkbox {
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 4px;
+}
+
