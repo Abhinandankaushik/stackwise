@@ -7,7 +7,7 @@ flowchart LR
   U[User browser] -->|Vite SPA| F[frontend/]
   F -->|POST /api/public/leads| B[backend Express MVC]
   F -->|POST /api/summary| B
-  B -->|pg| DB[(Neon Postgres)]
+  B -->|Mongoose| DB[(MongoDB)]
   B -->|SDK| Gem[Gemini API]
   B -->|fetch| Res[Resend email]
   F -->|encode slug| URL[/a/:slug client route]
@@ -19,7 +19,7 @@ flowchart LR
 |-------|------|
 | **routes/** | Mounts `/api/public/leads`, `/api/summary` |
 | **controllers/** | Parse request, call models/services, JSON response |
-| **models/** | SQL via `pg` + `DATABASE_URL` (Neon) |
+| **models/** | Mongoose schemas + `MONGODB_URI` |
 | **services/** | Gemini summary, Resend email |
 | **views/** | HTML email templates |
 | **middleware/** | IP rate limits |
@@ -27,7 +27,7 @@ flowchart LR
 ## Data flow
 
 1. `frontend` runs audit math client-side (`audit-engine.ts`).
-2. Optional email → `POST /api/public/leads` → `leads` + `audits` tables on Neon.
+2. Optional email → `POST /api/public/leads` → `leads` + `audits` collections on MongoDB.
 3. Summary → `POST /api/summary` → Gemini → fallback template.
 4. Share link encodes public payload in URL (`/a/:slug`); no PII in slug.
 
@@ -39,7 +39,7 @@ flowchart LR
 
 ## Env vars
 
-**Backend:** `DATABASE_URL`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `FRONTEND_URL`  
+**Backend:** `MONGODB_URI`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `FRONTEND_URL`  
 **Frontend:** `VITE_API_URL`
 
 ## 10k audits/day

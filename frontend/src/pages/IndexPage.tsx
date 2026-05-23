@@ -177,7 +177,7 @@ function FAQ({ onOpenWidgetModal }: { onOpenWidgetModal: () => void }) {
     },
     {
       q: "Is my data sent anywhere?",
-      a: "Spend inputs stay in your browser until you opt in to email — then only email + audit summary go to our API (Neon Postgres). Public share links never include company name or email.",
+      a: "Spend inputs stay in your browser until you opt in to email — then only email + audit summary go to our API (MongoDB). Public share links never include company name or email.",
     },
     {
       q: "Why is this free?",
@@ -226,7 +226,7 @@ function Footer() {
     <footer className="border-t border-border/60 py-8">
       <div className="max-w-5xl mx-auto px-5 md:px-8 text-xs text-muted-foreground flex flex-wrap justify-between gap-2">
         <span>© {new Date().getFullYear()} Stackwise · Built for Credex</span>
-        <span>Pricing verified weekly · Neon Postgres · Express API</span>
+        <span>Pricing verified weekly · MongoDB · Express API</span>
       </div>
     </footer>
   );

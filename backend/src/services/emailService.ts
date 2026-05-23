@@ -1,5 +1,8 @@
-import { env, hasResend } from "../config/env.js";
 import { auditConfirmationHtml } from "../views/emailTemplates.js";
+
+export function hasResend(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
 
 export async function sendAuditConfirmationEmail(params: {
   to: string;
@@ -18,14 +21,17 @@ export async function sendAuditConfirmationEmail(params: {
     ? `Your Stackwise audit: ~$${params.monthlySavings}/mo in potential savings`
     : `Your Stackwise AI spend audit is saved`;
 
+  const resendApiKey = process.env.RESEND_API_KEY ?? "";
+  const resendFromEmail = process.env.RESEND_FROM_EMAIL ?? "Stackwise <audits@stackwise.app>";
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.resendApiKey}`,
+      Authorization: `Bearer ${resendApiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: env.resendFromEmail,
+      from: resendFromEmail,
       to: [params.to],
       subject,
       html: auditConfirmationHtml(params),
@@ -38,3 +44,4 @@ export async function sendAuditConfirmationEmail(params: {
 
   return { sent: true as const };
 }
+

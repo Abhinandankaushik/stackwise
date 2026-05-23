@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { hasDatabase } from "../config/env.js";
+import { hasDatabase } from "../config/database.js";
 import { createAudit } from "../models/auditModel.js";
 import { createLead } from "../models/leadModel.js";
 import { sendAuditConfirmationEmail } from "../services/emailService.js";

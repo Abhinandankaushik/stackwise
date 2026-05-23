@@ -1,4 +1,4 @@
-import { query } from "../config/database.js";
+import mongoose, { Schema } from "mongoose";
 
 export interface LeadRecord {
   email: string;
@@ -8,20 +8,25 @@ export interface LeadRecord {
   audit_id: string;
   monthly_savings?: number | null;
   audit_state?: string | null;
+  created_at?: Date;
 }
 
+const LeadSchema = new Schema<LeadRecord>({
+  email: { type: String, required: true, index: true },
+  company: { type: String, default: null },
+  role: { type: String, default: null },
+  team_size: { type: Number, default: null },
+  audit_id: { type: String, required: true },
+  monthly_savings: { type: Number, default: null },
+  audit_state: { type: String, default: null },
+  created_at: { type: Date, default: Date.now },
+});
+
+LeadSchema.index({ created_at: -1 });
+
+export const Lead = mongoose.models.Lead || mongoose.model<LeadRecord>("Lead", LeadSchema);
+
 export async function createLead(row: LeadRecord) {
-  await query(
-    `insert into leads (email, company, role, team_size, audit_id, monthly_savings, audit_state)
-     values ($1, $2, $3, $4, $5, $6, $7)`,
-    [
-      row.email,
-      row.company ?? null,
-      row.role ?? null,
-      row.team_size ?? null,
-      row.audit_id,
-      row.monthly_savings ?? null,
-      row.audit_state ?? null,
-    ],
-  );
+  const newLead = new Lead(row);
+  await newLead.save();
 }

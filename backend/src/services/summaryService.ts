@@ -1,5 +1,9 @@
-import { env, hasGemini } from "../config/env.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export function hasGemini(): boolean {
+  const geminiKey = process.env.GEMINI_API_KEY ?? "";
+  return Boolean(geminiKey) && geminiKey !== "AIzaSy..." && !geminiKey.includes("...");
+}
 
 const SYSTEM_PROMPT = `You are a finance-literate engineering coach writing for a startup founder.
 Rules:
@@ -51,7 +55,8 @@ export function templatedSummary(result: AuditResultPayload, useCase: string): s
 export async function generateSummary(result: AuditResultPayload, useCase: string) {
   if (hasGemini()) {
     try {
-      const genAI = new GoogleGenerativeAI(env.geminiApiKey);
+      const geminiApiKey = process.env.GEMINI_API_KEY ?? "";
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
       const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",
         systemInstruction: SYSTEM_PROMPT,
@@ -73,3 +78,4 @@ export async function generateSummary(result: AuditResultPayload, useCase: strin
 
   return { text: templatedSummary(result, useCase), source: "template" as const };
 }
+

@@ -1,26 +1,26 @@
-import pg from "pg";
-import { env, hasDatabase } from "./env.js";
+import mongoose from "mongoose";
 
-const { Pool } = pg;
+let isConnected = false;
 
-let pool: pg.Pool | null = null;
+export function hasDatabase(): boolean {
+  const dbUrl = process.env.MONGODB_URI ?? process.env.DATABASE_URL ?? "";
+  return Boolean(dbUrl) && (dbUrl.startsWith("mongodb://") || dbUrl.startsWith("mongodb+srv://"));
+}
 
-export function getPool(): pg.Pool {
+export async function connectDatabase() {
+  if (isConnected) return;
   if (!hasDatabase()) {
-    throw new Error("DATABASE_URL is not set");
+    console.warn("[stackwise] MongoDB URI / Database URL not set — skipping DB connection");
+    return;
   }
-  if (!pool) {
-    pool = new Pool({
-      connectionString: env.databaseUrl,
-      ssl: env.databaseUrl.includes("neon.tech") ? { rejectUnauthorized: false } : undefined,
-    });
+  try {
+    const dbUrl = process.env.MONGODB_URI ?? process.env.DATABASE_URL ?? "";
+    await mongoose.connect(dbUrl);
+    isConnected = true;
+    console.log("[stackwise] Connected to MongoDB");
+  } catch (err) {
+    console.error("[stackwise] MongoDB connection error:", err);
+    throw err;
   }
-  return pool;
 }
 
-export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
-  text: string,
-  params?: unknown[],
-) {
-  return getPool().query<T>(text, params);
-}
