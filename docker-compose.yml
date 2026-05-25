@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stackwise-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/stackwise}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost}
+    depends_on:
+      - mongodb
+    networks:
+      - stackwise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: stackwise-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - stackwise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mongodb:
+    image: mongo:7-alpine
+    container_name: stackwise-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=stackwise
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-rootpassword}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - stackwise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  stackwise:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  mongodb_config:
